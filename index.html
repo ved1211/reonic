@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reonic x Ved</title>
+  <meta name="description" content="Ved Gawade's application for the AI Product Manager Intern (AI x Greentech) role at Reonic: a sample bug ticket, sample release notes and a working feedback sorter." />
+  <meta name="theme-color" content="#09090B" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2309090B'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23C9B99A'%3EV%3C/text%3E%3C/svg%3E" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Reonic x Ved" />
+  <meta property="og:description" content="Three things I made for my AI Product Manager Intern application: a bug ticket, release notes and a feedback sorter." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script>
+    // Only hide elements for their entrance animation when GSAP actually loaded
+    if (window.gsap && window.ScrollTrigger && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('js-anim');
+    }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #09090B;
+      --surface:      #111114;
+      --card:         rgba(17,17,20,0.88);
+      --border:       #2E2E3A;
+      --border-soft:  #23232C;
+      --text:         #F5F3EE;
+      --text-soft:    #CFCCC6;
+      --text-muted:   #9896A0;
+      --accent:       #C9B99A;
+      --accent-dim:   #8A7B68;
+      --bug:          #E58C78;
+      --feature:      #8DB4D9;
+      --question:     #C9B99A;
+      --high:         #E58C78;
+      --medium:       #D9B55C;
+      --low:          #9896A0;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body:    'Inter', sans-serif;
+      --font-mono:    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    html {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      overflow-x: clip;
+      scroll-behavior: smooth;
+    }
+
+    /* clip (not hidden) so the body is not a scroll container and position: sticky still works */
+    body { min-height: 100vh; overflow-x: hidden; overflow-x: clip; background: var(--bg); }
+
+    a { color: inherit; }
+
+    /* ── Canvas ── */
+    #three-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* On phones the knot sits right behind the text, so fade it back */
+    @media (max-width: 768px) {
+      #three-canvas { opacity: 0.35; }
+    }
+
+    /* Text that sits straight on the background gets a soft dark halo, so it stays readable over the knot */
+    .hero-label, .hero-greeting, .hero-subline, .scroll-cue,
+    .stmt__eyebrow, .stmt__text, .block__intro, .disclaimer, .sorter__ai,
+    .final-text, .footer-word, .footer-note {
+      text-shadow: 0 0 22px rgba(9,9,11,0.9), 0 1px 3px rgba(9,9,11,0.7);
+    }
+
+    /* ── Scroll container ── */
+    #scroll-container {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Fixed right social rail, desktop/tablet only ── */
+    #social-rail {
+      position: fixed;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    #social-rail.visible { opacity: 1; }
+
+    .rail-line {
+      width: 1px;
+      height: 36px;
+      background: var(--border);
+      margin: 0.5rem 0;
+    }
+
+    .rail-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      color: #C0BDB8;
+      text-decoration: none;
+      transition: border-color 0.25s, color 0.25s, transform 0.25s, background 0.25s;
+      background: rgba(9,9,11,0.7);
+      backdrop-filter: blur(8px);
+    }
+
+    .rail-icon:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(201,185,154,0.06);
+      transform: scale(1.1);
+    }
+
+    .rail-icon svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+    }
+
+    @media (max-width: 768px) {
+      #social-rail { display: none; }
+    }
+
+    /* ── Cursor glow ── */
+    #cursor-glow {
+      position: fixed;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,185,154,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 2;
+      transform: translate(-50%, -50%);
+    }
+
+    /* ══════════════════════════════════════
+       HERO
+    ══════════════════════════════════════ */
+    #hero {
+      min-height: 100svh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 5rem 7vw 6rem;
+    }
+
+    @media (max-width: 768px) {
+      #hero { padding: 4.5rem 6vw 6rem; }
+    }
+
+    .hero-label {
+      font-family: var(--font-body);
+      font-size: clamp(0.7rem, 1.1vw, 0.75rem);
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    .hero-greeting {
+      font-family: var(--font-display);
+      font-size: clamp(2.3rem, 4.9vw, 4.6rem);
+      font-weight: 300;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      margin-bottom: 1.6rem;
+      max-width: 780px;
+    }
+
+    .hero-greeting em {
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    .hero-subline {
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1.4;
+      max-width: 560px;
+    }
+
+    .hero-index {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 2rem;
+    }
+
+    .hero-index a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 1rem 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(9,9,11,0.6);
+      backdrop-filter: blur(8px);
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      text-decoration: none;
+      transition: border-color 0.25s, color 0.25s;
+    }
+
+    .hero-index a:hover { border-color: var(--accent); color: var(--text); }
+
+    .hero-index span {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+    }
+
+    .scroll-cue {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 7vw;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-family: var(--font-body);
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-dim);
+    }
+
+    @media (max-width: 768px) {
+      .scroll-cue { left: 6vw; bottom: 2rem; }
+    }
+
+    .scroll-cue__line {
+      width: 36px;
+      height: 1px;
+      background: var(--accent-dim);
+      transform-origin: left;
+      animation: linepulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes linepulse {
+      0%, 100% { opacity: 0.35; transform: scaleX(1); }
+      50%       { opacity: 1;   transform: scaleX(1.4); }
+    }
+
+    /* Entrance states, only when GSAP is there to reveal them */
+    .js-anim .hero-label    { opacity: 0; transform: translateY(10px); }
+    .js-anim .hero-greeting { opacity: 0; transform: translateY(18px); }
+    .js-anim .hero-subline,
+    .js-anim .hero-index    { opacity: 0; transform: translateY(14px); }
+    .js-anim .scroll-cue    { opacity: 0; }
+    .js-anim .reveal        { opacity: 0; transform: translateY(20px); }
+
+    /* ══════════════════════════════════════
+       CONTENT BLOCKS
+    ══════════════════════════════════════ */
+    .block {
+      padding: clamp(5rem, 11vw, 9rem) max(7vw, 6.5rem) clamp(1rem, 3vw, 2rem) 7vw;
+    }
+
+    @media (max-width: 768px) {
+      .block { padding: 4rem 6vw 1rem; }
+    }
+
+    .block__head {
+      max-width: 760px;
+      margin-bottom: clamp(2rem, 4vw, 3rem);
+    }
+
+    .stmt__eyebrow {
+      display: block;
+      font-size: clamp(0.7rem, 0.9vw, 0.74rem);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .stmt__text {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 4vw, 3.6rem);
+      font-weight: 300;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .stmt__text strong {
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .stmt__text .muted {
+      color: var(--text-muted);
+    }
+
+    .block__intro {
+      font-size: clamp(0.98rem, 1.2vw, 1.08rem);
+      line-height: 1.7;
+      color: var(--text-muted);
+      margin-top: 1.4rem;
+      max-width: 620px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.82em;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-soft);
+      border-radius: 4px;
+      padding: 0.08em 0.35em;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    /* ── Tags ── */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+
+    .tag--bug      { color: var(--bug);      border-color: rgba(229,140,120,0.35); background: rgba(229,140,120,0.08); }
+    .tag--feature  { color: var(--feature);  border-color: rgba(141,180,217,0.35); background: rgba(141,180,217,0.08); }
+    .tag--question { color: var(--question); border-color: rgba(201,185,154,0.35); background: rgba(201,185,154,0.08); }
+
+    .prio::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .prio--high   { color: var(--high); }
+    .prio--medium { color: var(--medium); }
+    .prio--low    { color: var(--low); }
+
+    /* ── Field list (ticket + internal note) ── */
+    .fields {
+      display: grid;
+      grid-template-columns: 9rem minmax(0, 1fr);
+      gap: 0.95rem 1.5rem;
+      padding: 1.25rem 0;
+      border-top: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .fields dt {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding-top: 0.3rem;
+    }
+
+    .fields dd {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--text-soft);
+    }
+
+    @media (max-width: 640px) {
+      .fields { grid-template-columns: minmax(0, 1fr); gap: 0.3rem; }
+      .fields dd { margin-bottom: 0.75rem; }
+      .fields dd:last-child { margin-bottom: 0; }
+    }
+
+    /* ══════════════════════════════════════
+       01 BUG TICKET
+    ══════════════════════════════════════ */
+    .ticket {
+      max-width: 960px;
+      padding: clamp(1.25rem, 3vw, 2.25rem);
+    }
+
+    .ticket__top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .ticket__date {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .ticket__title {
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+      font-weight: 500;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      margin-bottom: 1.4rem;
+    }
+
+    .ticket__section { padding-top: 1.5rem; }
+
+    .ticket__section > .label { margin-bottom: 0.75rem; }
+
+    .ticket ol,
+    .ticket ul {
+      display: grid;
+      gap: 0.5rem;
+      padding-left: 1.25rem;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--text-soft);
+    }
+
+    .ticket li::marker { color: var(--accent-dim); }
+
+    .ticket p {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--text-soft);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 2rem;
+    }
+
+    @media (max-width: 760px) {
+      .result-grid { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .shots {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 1.25rem;
+      align-items: start;
+      padding-top: 1.75rem;
+    }
+
+    @media (max-width: 760px) {
+      .shots { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .shot a { display: block; }
+
+    .shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      transition: border-color 0.25s;
+    }
+
+    .shot a:hover img { border-color: var(--accent-dim); }
+
+    .shot figcaption {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════════════
+       02 RELEASE NOTES
+    ══════════════════════════════════════ */
+    .notes {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 1.25rem;
+      max-width: 1060px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .notes { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .note { padding: clamp(1.25rem, 3vw, 2rem); }
+
+    .note__label { margin-bottom: 1rem; }
+
+    .note__title {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 2vw, 1.55rem);
+      font-weight: 500;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+    }
+
+    .note p,
+    .note li {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text-soft);
+    }
+
+    .note p + p { margin-top: 0.75rem; }
+
+    .note__example {
+      margin: 0.75rem 0;
+      padding: 0.15rem 0 0.15rem 0.9rem;
+      border-left: 2px solid var(--accent);
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .note ul {
+      display: grid;
+      gap: 0.35rem;
+      margin-top: 1rem;
+      padding-left: 1.2rem;
+    }
+
+    .note li::marker { color: var(--accent-dim); }
+
+    .note__foot {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-soft);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .note .fields { grid-template-columns: 7.5rem minmax(0, 1fr); border-bottom: 0; padding-bottom: 0; }
+    .note .fields dd { font-size: 0.9rem; }
+
+    @media (max-width: 640px) {
+      .note .fields { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .disclaimer {
+      max-width: 1060px;
+      margin-top: 1.1rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .disclaimer strong { color: var(--text-soft); font-weight: 500; }
+
+    /* ══════════════════════════════════════
+       03 FEEDBACK SORTER
+    ══════════════════════════════════════ */
+    .sorter {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: 1.25rem;
+      max-width: 1180px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .sorter { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .sorter__panel { padding: clamp(1.1rem, 2.5vw, 1.5rem); }
+
+    /* Side by side, keep the input in view while scrolling the ticket list */
+    @media (min-width: 1101px) {
+      .sorter__panel--input { position: sticky; top: 2rem; }
+    }
+
+    .sorter__labelrow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .sorter__labelrow label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .sorter textarea {
+      display: block;
+      width: 100%;
+      min-height: 17rem;
+      resize: vertical;
+      padding: 0.9rem 1rem;
+      background: rgba(0,0,0,0.35);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: 400 0.9rem/1.65 var(--font-body);
+    }
+
+    .sorter textarea:focus-visible,
+    .btn:focus-visible,
+    .hero-index a:focus-visible,
+    .footer-link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .sorter__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.9rem;
+    }
+
+    .btn {
+      padding: 0.7rem 1.15rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font: 500 0.85rem var(--font-body);
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, color 0.25s;
+    }
+
+    .btn:hover { border-color: var(--accent); }
+
+    .btn--primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #141210;
+    }
+
+    .btn--primary:hover { background: #D8CAAE; border-color: #D8CAAE; }
+
+    .sorter__hint {
+      margin-top: 0.9rem;
+      font-size: 0.8rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    .sorter__summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: var(--text-soft);
+    }
+
+    .sorter__summary p { width: 100%; margin-bottom: 0.2rem; }
+
+    .fb-cards {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .fb-card {
+      padding: 0.95rem 1.1rem;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border-soft);
+      border-left: 3px solid var(--type-color, var(--border));
+      border-radius: 8px;
+    }
+
+    .fb-card--bug      { --type-color: var(--bug); }
+    .fb-card--feature  { --type-color: var(--feature); }
+    .fb-card--question { --type-color: var(--question); }
+
+    .fb-card__top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .fb-card__id {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .fb-card__text {
+      margin-top: 0.65rem;
+      font-size: 0.93rem;
+      line-height: 1.55;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .fb-card__why {
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    .sorter__ai {
+      max-width: 1180px;
+      margin-top: 1.1rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════════════
+       04 ABOUT
+    ══════════════════════════════════════ */
+    .about {
+      display: grid;
+      gap: 1rem;
+      max-width: 960px;
+    }
+
+    .about-item {
+      display: grid;
+      grid-template-columns: 11rem minmax(0, 1fr);
+      gap: 1.5rem;
+      padding: clamp(1.15rem, 2.5vw, 1.6rem);
+    }
+
+    @media (max-width: 700px) {
+      .about-item { grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
+    }
+
+    .about-item__when { line-height: 1.7; padding-top: 0.2rem; }
+
+    .about-item h3 {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+      font-weight: 500;
+      line-height: 1.3;
+      margin-bottom: 0.45rem;
+    }
+
+    .about-item p,
+    .about-item li {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--text-soft);
+    }
+
+    .about-item ul {
+      display: grid;
+      gap: 0.3rem;
+      margin-top: 0.75rem;
+      padding-left: 1.2rem;
+    }
+
+    .about-item li::marker { color: var(--accent-dim); }
+
+    /* ══════════════════════════════════════
+       FINAL STATEMENT
+    ══════════════════════════════════════ */
+    #final-statement {
+      padding: clamp(5rem, 12vw, 9rem) 7vw clamp(2rem, 4vw, 3rem);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      #final-statement { padding: 5rem 6vw 2rem; }
+    }
+
+    .final-text {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 4vw, 3.4rem);
+      font-weight: 300;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      max-width: 700px;
+      color: var(--text);
+    }
+
+    .final-text em {
+      font-style: normal;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .final-text .muted { color: var(--text-muted); }
+
+    /* ══════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════ */
+    #footer {
+      padding: 1rem 6vw 4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.6rem;
+      text-align: center;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .footer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.65rem 1.05rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(20,20,24,0.8);
+      color: #D0CEC9;
+      font-size: 0.88rem;
+      text-decoration: none;
+      transition: border-color 0.25s, color 0.25s;
+    }
+
+    .footer-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .footer-link svg {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .footer-word {
+      font-family: var(--font-display);
+      font-size: clamp(0.7rem, 1vw, 0.8rem);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent-dim);
+    }
+
+    .footer-note {
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 440px;
+    }
+
+    /* ── Noise overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.35;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ CURSOR GLOW ═══ -->
+<div id="cursor-glow"></div>
+
+<!-- ═══ THREE.JS CANVAS ═══ -->
+<canvas id="three-canvas"></canvas>
+
+<!-- ═══ FIXED RIGHT SOCIAL RAIL (desktop + tablet) ═══ -->
+<nav id="social-rail" aria-label="Social links">
+  <div class="rail-line"></div>
+
+  <a class="rail-icon" href="mailto:vedgawade1219@gmail.com" title="Email" aria-label="Email">
+    <svg viewBox="0 0 24 24"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+  </a>
+
+  <a class="rail-icon" href="https://www.linkedin.com/in/ved-gawade/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
+    <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+  </a>
+
+  <a class="rail-icon" href="https://github.com/ved1211" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+    <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+  </a>
+
+  <a class="rail-icon" href="https://ved1211.github.io/portfolio/" target="_blank" rel="noopener" title="Portfolio" aria-label="Portfolio">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+  </a>
+
+  <div class="rail-line"></div>
+</nav>
+
+<!-- ═══ SCROLL CONTENT ═══ -->
+<div id="scroll-container">
+
+  <!-- ── HERO ── -->
+  <section id="hero">
+    <div>
+      <p class="hero-label" id="hero-label">Application · AI Product Manager Intern (AI x Greentech)</p>
+      <h1 class="hero-greeting" id="hero-greeting">
+        Hi <em>Reonic.</em><br />
+        You're looking for someone who has vibe-coded a thing or two.
+      </h1>
+      <p class="hero-subline" id="hero-subline">
+        Here are three things I made for this application.
+      </p>
+      <ol class="hero-index" id="hero-index">
+        <li><a href="#bug-ticket"><span>01</span>A bug ticket</a></li>
+        <li><a href="#release-notes"><span>02</span>Release notes</a></li>
+        <li><a href="#feedback-sorter"><span>03</span>A feedback sorter</a></li>
+      </ol>
+    </div>
+    <div class="scroll-cue" id="scroll-cue">
+      <div class="scroll-cue__line"></div>
+      Scroll
+    </div>
+  </section>
+
+  <!-- ── 01 BUG TICKET ── -->
+  <section class="block" id="bug-ticket">
+    <div class="block__head reveal">
+      <span class="stmt__eyebrow">01 / Sample bug ticket</span>
+      <h2 class="stmt__text">
+        <span class="muted">I looked for bugs</span><br />
+        <strong>on reonic.com.</strong>
+      </h2>
+      <p class="block__intro">
+        I went through Reonic's English website looking for small problems and reproduced this one on 29 October 2026.
+        Here it is as a ticket, written the way I would hand it to an engineer.
+      </p>
+    </div>
+
+    <article class="card ticket reveal" aria-labelledby="ticket-title">
+      <div class="ticket__top">
+        <span class="tag tag--bug">Bug</span>
+        <span class="tag">Website / Blog</span>
+        <span class="tag prio prio--medium">Severity: Medium</span>
+        <span class="ticket__date">Reproduced 29 Oct 2026</span>
+      </div>
+
+      <h3 class="ticket__title" id="ticket-title">Blog share buttons for LinkedIn, WhatsApp and Email share the post without its link</h3>
+
+      <dl class="fields">
+        <dt>Where</dt>
+        <dd>
+          The "Share article" box in the left sidebar of blog posts, in the wide desktop layout (I tested at 1440px).
+          Example post: <a href="https://reonic.com/en-gb/blog/solar-panel-warranty-uk/" target="_blank" rel="noopener"><code>reonic.com/en-gb/blog/solar-panel-warranty-uk/</code></a>
+        </dd>
+        <dt>Scope</dt>
+        <dd>
+          All 130 English blog posts in the sitemap. The German, French and Italian posts I checked have the same problem.
+          The page also has a second set of share links for smaller screens, with the same empty values.
+        </dd>
+        <dt>Environment</dt>
+        <dd>
+          Chromium browser on macOS, window 1440 x 900. The empty links are already in the HTML the server sends, so this is not browser specific.
+        </dd>
+      </dl>
+
+      <div class="ticket__section">
+        <span class="label">Steps to reproduce</span>
+        <ol>
+          <li>Open <code>https://reonic.com/en-gb/blog/solar-panel-warranty-uk/</code> in a desktop browser window at least 1280px wide.</li>
+          <li>In the left sidebar, scroll down to "Share article".</li>
+          <li>Click the LinkedIn icon.</li>
+          <li>Go back and click the WhatsApp icon. Then go back and click the Email icon.</li>
+          <li>For comparison, click the Copy link icon and paste the result somewhere.</li>
+        </ol>
+      </div>
+
+      <div class="result-grid">
+        <div class="ticket__section">
+          <span class="label">Expected result</span>
+          <ul>
+            <li>LinkedIn opens its share dialog with the post URL, for example <code>share-offsite/?url=https%3A%2F%2Freonic.com%2Fen-gb%2Fblog%2Fsolar-panel-warranty-uk%2F</code></li>
+            <li>The WhatsApp message contains the post title and the post URL.</li>
+            <li>The email opens with the post URL in the body.</li>
+          </ul>
+        </div>
+        <div class="ticket__section">
+          <span class="label">Actual result</span>
+          <ul>
+            <li>LinkedIn opens <code>https://www.linkedin.com/sharing/share-offsite/?url=</code> with an empty <code>url</code>, so there is nothing to share.</li>
+            <li>WhatsApp opens with the title only and no link (screenshot below).</li>
+            <li>The email opens with the subject filled in and an empty body.</li>
+            <li>Copy link works and copies <code>https://reonic.com/en-gb/blog/solar-panel-warranty-uk/</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="shots">
+        <figure class="shot">
+          <a href="assets/bug-share-context.jpg" target="_blank" rel="noopener">
+            <img src="assets/bug-share-context.jpg" width="1400" height="1288" loading="lazy"
+                 alt="Screenshot of the example blog post with the Share article box in the left sidebar. The LinkedIn, WhatsApp and Email buttons are boxed in red." />
+          </a>
+          <figcaption>Where: the "Share article" box on the example post. Red box and label added by me. Click to enlarge.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="assets/bug-share-whatsapp.png" target="_blank" rel="noopener">
+            <img src="assets/bug-share-whatsapp.png" width="1240" height="480" loading="lazy"
+                 alt="Screenshot of the WhatsApp share screen. The message only contains the article title and no link." />
+          </a>
+          <figcaption>Actual: the WhatsApp share screen after clicking the button. The message is only the title. Red box and label added by me. Click to enlarge.</figcaption>
+        </figure>
+      </div>
+
+      <div class="ticket__section">
+        <span class="label">Notes for the engineer</span>
+        <ul>
+          <li>The <code>href</code> values are already empty in the server HTML (checked with curl) and are still empty after the page has loaded.</li>
+          <li>Copy link works, so it probably reads the URL when it is clicked. The other three links look like they are built during server rendering, when the page URL is not known, and are not updated in the browser afterwards.</li>
+          <li>Possible fix: build all share links from the post's canonical URL. It is already correct in the page head: <code>&lt;link rel="canonical" href="https://reonic.com/en-gb/blog/solar-panel-warranty-uk/"&gt;</code></li>
+          <li>To check the fix: click all three buttons on one post per language and confirm the link is there.</li>
+          <li>How I tested: I clicked the buttons with navigation blocked so nothing was posted, then opened the WhatsApp link in a clean browser for the screenshot.</li>
+        </ul>
+      </div>
+
+      <div class="ticket__section">
+        <span class="label">Why Medium</span>
+        <p>
+          Three of the four share options fail on every blog post, in at least four languages. There is no data loss or security risk,
+          and Copy link still works as a workaround, so I would not call it High.
+        </p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ── 02 RELEASE NOTES ── -->
+  <section class="block" id="release-notes">
+    <div class="block__head reveal">
+      <span class="stmt__eyebrow">02 / Sample release notes</span>
+      <h2 class="stmt__text">
+        <span class="muted">One feature,</span><br />
+        <strong>two audiences.</strong>
+      </h2>
+      <p class="block__intro">
+        Reonic marks AI Single Line Diagram as new on its homepage. I wrote release notes for it twice:
+        a short, friendly one for installers and a shorter one for colleagues inside Reonic.
+      </p>
+    </div>
+
+    <div class="notes">
+      <article class="card note reveal" aria-labelledby="note-installers">
+        <span class="label note__label">What's new · For installers</span>
+        <h3 class="note__title" id="note-installers">Your single line diagram, drawn for you</h3>
+        <p>
+          Reonic can now create the single line diagram from the components in your planning,
+          so you don't start from a blank page.
+        </p>
+        <p>Want to change something? Just ask. For example:</p>
+        <p class="note__example">"Add an AC surge protector at the inverter output."</p>
+        <p>
+          The AI updates the diagram. You check the result in the editor, change anything by hand if you like, and save.
+        </p>
+        <ul>
+          <li>Built from your planned system</li>
+          <li>Edit by asking, or by hand</li>
+          <li>Save diagrams as templates and reuse them</li>
+          <li>Import a diagram you already have</li>
+          <li>Export as PDF or JPG</li>
+        </ul>
+        <p class="note__foot">Available for residential projects in workspaces with AI Circuit Plan turned on.</p>
+      </article>
+
+      <article class="card note reveal" aria-labelledby="note-internal">
+        <span class="label note__label">Internal · For Reonic colleagues</span>
+        <h3 class="note__title" id="note-internal">AI Single Line Diagram (AI Circuit Plan)</h3>
+        <dl class="fields">
+          <dt>What</dt>
+          <dd>Generates the diagram from the planned components. Users ask AI to add, remove or reconnect elements, then review and save in the editor. Export as JPG or PDF.</dd>
+          <dt>Who</dt>
+          <dd>Residential projects, in workspaces with AI Circuit Plan enabled.</dd>
+          <dt>Key message</dt>
+          <dd>The AI suggests the change. The installer checks it and saves.</dd>
+          <dt>Confirm first</dt>
+          <dd>Release date, markets and plans, and how a workspace gets it enabled.</dd>
+        </dl>
+      </article>
+    </div>
+
+    <p class="disclaimer reveal">
+      <strong>Based only on public information:</strong> Reonic's
+      <a href="https://reonic.com/en-gb/product/360h/single-line-diagram/" target="_blank" rel="noopener">Single Line Diagram product page</a>,
+      read on 29 October 2026. I don't know the real release date, rollout or screens, so I left them out or listed them as questions.
+    </p>
+  </section>
+
+  <!-- ── 03 FEEDBACK SORTER ── -->
+  <section class="block" id="feedback-sorter">
+    <div class="block__head reveal">
+      <span class="stmt__eyebrow">03 / Working prototype</span>
+      <h2 class="stmt__text">
+        <span class="muted">Feedback in,</span><br />
+        <strong>tickets out.</strong>
+      </h2>
+      <p class="block__intro">
+        Paste customer feedback, one message per line. The sorter files each message as a Bug, Feature request or Question
+        and gives it a priority. It runs in your browser, with no backend and no API keys.
+      </p>
+    </div>
+
+    <div class="sorter reveal">
+      <div class="card sorter__panel sorter__panel--input">
+        <div class="sorter__labelrow">
+          <label for="fb-input">Customer feedback, one message per line</label>
+          <span class="tag" id="fb-example-tag">Made-up examples</span>
+        </div>
+        <textarea id="fb-input" spellcheck="false" aria-describedby="fb-hint"></textarea>
+        <div class="sorter__actions">
+          <button class="btn btn--primary" id="fb-run" type="button">Sort feedback</button>
+          <button class="btn" id="fb-reset" type="button">Reset examples</button>
+          <button class="btn" id="fb-clear" type="button">Clear</button>
+        </div>
+        <p class="sorter__hint" id="fb-hint">
+          I wrote the example messages myself to sound like solar installers. They are not from real Reonic customers.
+          Tip: Ctrl or Cmd + Enter also sorts.
+        </p>
+      </div>
+
+      <div class="card sorter__panel" aria-labelledby="fb-results-title">
+        <span class="label" id="fb-results-title" style="margin-bottom: 0.9rem;">Tickets</span>
+        <div class="sorter__summary" id="fb-summary" aria-live="polite"></div>
+        <div class="fb-cards" id="fb-cards"></div>
+      </div>
+    </div>
+
+    <p class="sorter__ai reveal">
+      This version uses simple keyword rules in JavaScript. A real version could use an AI model to sort each message
+      and write the ticket title, with a person checking the result.
+    </p>
+  </section>
+
+  <!-- ── 04 ABOUT ── -->
+  <section class="block" id="about">
+    <div class="block__head reveal">
+      <span class="stmt__eyebrow">04 / About me</span>
+      <h2 class="stmt__text">
+        <span class="muted">Where I've</span><br />
+        <strong>done this before.</strong>
+      </h2>
+    </div>
+
+    <div class="about">
+      <article class="card about-item reveal">
+        <span class="label about-item__when">Dec 2024 - Jun 2025</span>
+        <div>
+          <h3>Technical Program Manager, SuperAGI</h3>
+          <p>An AI B2B CRM and sales automation startup.</p>
+          <ul>
+            <li>Coordinated delivery across 6 AI products</li>
+            <li>Tracked releases from staging to production</li>
+            <li>Ran product demos with clients to collect requirements and bugs</li>
+            <li>Prioritised them with MoSCoW and RICE, and wrote PRDs</li>
+            <li>Introduced 2-week sprints (task completion +30%)</li>
+            <li>Reported weekly to 10+ stakeholders</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card about-item reveal">
+        <span class="label about-item__when">Built with Claude Code</span>
+        <div>
+          <h3>TUM Business Game website</h3>
+          <p>Astro, TypeScript, Keystatic CMS, Vercel.</p>
+        </div>
+      </article>
+
+      <article class="card about-item reveal">
+        <span class="label about-item__when">Now</span>
+        <div>
+          <h3>M.Sc. Digital Innovation Management, Hochschule Neu-Ulm</h3>
+          <p>Available full-time for 6 months from December 2026.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ── FINAL STATEMENT ── -->
+  <section id="final-statement">
+    <p class="final-text reveal" id="final-text">
+      <span class="muted">Thanks for reading.</span><br />
+      <em>Let's talk.</em>
+    </p>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer id="footer">
+    <nav class="footer-links reveal" aria-label="Contact">
+      <a class="footer-link" href="mailto:vedgawade1219@gmail.com">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        vedgawade1219@gmail.com
+      </a>
+      <a class="footer-link" href="https://www.linkedin.com/in/ved-gawade/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        LinkedIn
+      </a>
+      <a class="footer-link" href="https://github.com/ved1211" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        GitHub
+      </a>
+      <a class="footer-link" href="https://ved1211.github.io/portfolio/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        Portfolio
+      </a>
+    </nav>
+
+    <p class="footer-word">Ved Gawade · 2026</p>
+    <p class="footer-note">My own page, made for this application. It is not made by or connected to Reonic.</p>
+  </footer>
+
+</div>
+
+<script>
+/* ═══ THREE.JS ═══ */
+(function () {
+  if (!window.THREE) return;
+  const canvas = document.getElementById('three-canvas');
+  const W = () => window.innerWidth;
+  const H = () => window.innerHeight;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W(), H());
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, W() / H(), 0.1, 100);
+  camera.position.set(0, 0, 6);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.04));
+
+  const key = new THREE.DirectionalLight(0xC9B99A, 2.2);
+  key.position.set(3, 4, 3);
+  scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0x8899CC, 0.9);
+  fill.position.set(-4, -1, 2);
+  scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xffffff, 0.6);
+  rim.position.set(0, -3, -3);
+  scene.add(rim);
+
+  const pt = new THREE.PointLight(0xC9B99A, 1.8, 14);
+  pt.position.set(2, 2, 2);
+  scene.add(pt);
+
+  scene.add(new THREE.HemisphereLight(0x443322, 0x112233, 0.55));
+
+  const geo = new THREE.TorusKnotGeometry(1.2, 0.34, 200, 24, 2, 3);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x8899AA,
+    metalness: 0.90,
+    roughness: 0.14,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+
+  const mouse = { x: 0, y: 0 };
+  const smooth = { x: 0, y: 0 };
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = (e.clientX / W() - 0.5) * 2;
+    mouse.y = (e.clientY / H() - 0.5) * 2;
+  });
+
+  let scrollT = 0, scrollS = 0;
+  window.addEventListener('scroll', () => {
+    const max = document.body.scrollHeight - window.innerHeight;
+    scrollT = max > 0 ? window.scrollY / max : 0;
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = W() / H();
+    camera.updateProjectionMatrix();
+    renderer.setSize(W(), H());
+  });
+
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    scrollS += (scrollT - scrollS) * 0.05;
+    smooth.x += (mouse.x - smooth.x) * 0.04;
+    smooth.y += (mouse.y - smooth.y) * 0.04;
+
+    mesh.rotation.x = t * 0.11 + smooth.y * 0.28;
+    mesh.rotation.y = t * 0.17 + smooth.x * 0.28;
+    mesh.rotation.z = t * 0.055;
+
+    mesh.scale.setScalar(1 + scrollS * 0.16);
+
+    const r = 0.53 + scrollS * 0.17;
+    const g = 0.60 + scrollS * 0.12;
+    const b = 0.67 + scrollS * 0.11;
+    mat.color.setRGB(r, g, b);
+    mat.metalness = 0.72 + scrollS * 0.25;
+    mat.roughness = 0.22 - scrollS * 0.16;
+
+    camera.position.x = Math.sin(t * 0.07) * 0.25 + smooth.x * 0.35;
+    camera.position.y = Math.sin(t * 0.05) * 0.12 - smooth.y * 0.25;
+
+    // desktop: push to right half; mobile: center, behind the content
+    mesh.position.x = W() > 768 ? 2.2 : 0;
+    mesh.position.z = W() > 768 ? 0   : -1;
+
+    camera.lookAt(mesh.position);
+    renderer.render(scene, camera);
+  }
+
+  animate();
+})();
+
+/* ═══ GSAP ═══ */
+(function () {
+  if (!document.documentElement.classList.contains('js-anim')) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero
+  gsap.timeline({ defaults: { ease: 'power3.out' } })
+    .to('#hero-label',    { opacity: 1, y: 0, duration: 0.8, delay: 0.4 })
+    .to('#hero-greeting', { opacity: 1, y: 0, duration: 1.0 }, '-=0.5')
+    .to('#hero-subline',  { opacity: 1, y: 0, duration: 0.8 }, '-=0.5')
+    .to('#hero-index',    { opacity: 1, y: 0, duration: 0.8 }, '-=0.5')
+    .to('#scroll-cue',    { opacity: 1, duration: 0.6 }, '-=0.2');
+
+  // Sections, cards and the closing line
+  gsap.utils.toArray('.reveal').forEach(el => {
+    gsap.to(el, {
+      opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' }
+    });
+  });
+
+  // Lazy images change the page height after load
+  window.addEventListener('load', () => ScrollTrigger.refresh());
+})();
+
+/* ═══ SOCIAL RAIL ═══ */
+setTimeout(() => {
+  document.getElementById('social-rail').classList.add('visible');
+}, 900);
+
+/* ═══ FEEDBACK SORTER ═══ */
+(function () {
+  // Made-up examples, written to sound like solar installers
+  const EXAMPLES = [
+    "The app crashes every time I upload roof photos after a site visit. The customer is waiting for the offer.",
+    "The offer PDF shows the wrong total when I add a battery variant. We almost sent it to a customer.",
+    "Since the clock change, the calendar shows site visits at the wrong time.",
+    "Small typo in the time tracking menu: it says 'Comuting' instead of 'Commuting'.",
+    "Would be great if we could export the single line diagram as DWG for our electrician.",
+    "Can we connect Reonic to our accounting tool? We need it for invoicing every month.",
+    "How do I add a second roof face to an existing planning?",
+    "How can I resend the signed offer to a customer? They need it today."
+  ];
+
+  // First type with a match wins, in this order: a question about something broken is still a bug
+  const TYPE_RULES = {
+    bug: [
+      /\bcrash\w*/, /\berrors?\b/, /\bbroken\b/, /\bbugs?\b/, /\bnot working\b/,
+      /\b(?:doesn't|does not|don't|won't|isn't) (?:work|load|open|save|send)\w*/,
+      /\b(?:can't|cannot|unable to) (?:send|open|save|upload|load|log ?in|export|sign|connect)\b/,
+      /\bfail(?:s|ed|ing)?\b/, /\bwrong\b/, /\bincorrect\b/, /\bstuck\b/, /\bfreez\w*/, /\bfrozen\b/,
+      /\bdisappear\w*/, /\bblank (?:page|screen)\b/, /\btypo\b/, /\bglitch\w*/, /\bmissing\b/
+    ],
+    feature: [
+      /\bwould be (?:great|nice|good|helpful)\b/, /\bwould love\b/, /\b(?:please|could you|can you) add\b/,
+      /\bwish\b/, /\bfeature request\b/, /\b(?:option|ability) to\b/, /\bsupport for\b/,
+      /\bintegrat\w*/, /\bconnect\b/, /\bwe need\b/, /\bit would help\b/, /\bsuggestion\b/
+    ],
+    question: [
+      /\bhow (?:do|can|to|does)\b/, /\bwhere\b/, /\bis there\b/, /\bis it possible\b/, /\bcan i\b/,
+      /\bdoes\b/, /\bwhat\b/, /\bwhen\b/, /\bwhy\b/, /\bwhich\b/, /\?/
+    ]
+  };
+
+  // Checked top to bottom; the first level with a match wins, otherwise the type's default
+  const PRIORITY_RULES = {
+    bug: {
+      default: 'Medium',
+      High: [
+        /\bcustomers?\b/, /\bcrash\w*/, /\bevery time\b/, /\bnobody\b/, /\bno one\b/, /\bwhole team\b/,
+        /\blost\b/, /\bdata\b/, /\binvoices?\b/, /\bpayments?\b/, /\btotal\b/, /\bprices?\b/,
+        /\burgent\b/, /\basap\b/, /\bblock\w*/, /\bdeadline\b/
+      ],
+      Low: [/\btypo\b/, /\bminor\b/, /\bsmall\b/, /\bcosmetic\b/, /\bsometimes\b/]
+    },
+    feature: {
+      default: 'Low',
+      High: [/\burgent\b/, /\bblock\w*/, /\bdeadline\b/, /\bregulation\w*/, /\brequired by\b/, /\blegal\w*/],
+      Medium: [/\bwe need\b/, /\bwhole team\b/, /\bevery (?:day|week|month)\b/, /\ball our\b/, /\bcustomers keep asking\b/, /\bmany\b/]
+    },
+    question: {
+      default: 'Low',
+      Medium: [/\burgent\b/, /\btoday\b/, /\basap\b/, /\bwaiting\b/, /\bdeadline\b/, /\bright now\b/]
+    }
+  };
+
+  const TYPE_NAME = { bug: 'Bug', feature: 'Feature request', question: 'Question' };
+  const PRIORITY_ORDER = { High: 0, Medium: 1, Low: 2 };
+
+  const input   = document.getElementById('fb-input');
+  const cards   = document.getElementById('fb-cards');
+  const summary = document.getElementById('fb-summary');
+  const exampleTag = document.getElementById('fb-example-tag');
+
+  const matches = (text, rules) =>
+    [...new Set(rules.map(re => (text.match(re) || [])[0]).filter(Boolean))];
+
+  const quoteList = words =>
+    words.slice(0, 3).map(w => (w === '?' ? 'a question mark' : '“' + w + '”')).join(', ');
+
+  function classify(message) {
+    const text = message.toLowerCase().replace(/[‘’]/g, "'");
+
+    let type = null, typeHits = [];
+    for (const t of ['bug', 'feature', 'question']) {
+      const hits = matches(text, TYPE_RULES[t]);
+      if (hits.length) { type = t; typeHits = hits; break; }
+    }
+
+    const typeWhy = type
+      ? TYPE_NAME[type] + ' because of ' + quoteList(typeHits) + '.'
+      : 'No keywords matched, so it is filed as a Question for a person to check.';
+    type = type || 'question';
+
+    const rules = PRIORITY_RULES[type];
+    let priority = rules.default, prioWhy = priority + ' is the default for a ' + TYPE_NAME[type].toLowerCase() + '.';
+    for (const level of ['High', 'Medium', 'Low']) {
+      if (!rules[level]) continue;
+      const hits = matches(text, rules[level]);
+      if (hits.length) {
+        priority = level;
+        prioWhy = level + ' because of ' + quoteList(hits) + '.';
+        break;
+      }
+    }
+
+    return { type, priority, why: typeWhy + ' ' + prioWhy };
+  }
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  const plural = (n, word, many) => n + ' ' + (n === 1 ? word : (many || word + 's'));
+
+  function render() {
+    const lines = input.value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 100);
+    exampleTag.hidden = input.value.trim() !== EXAMPLES.join('\n');
+    cards.replaceChildren();
+    summary.replaceChildren();
+
+    if (!lines.length) {
+      summary.append(el('p', '', 'Paste at least one message, one per line, then press Sort feedback.'));
+      return;
+    }
+
+    const items = lines
+      .map((line, i) => ({ line, index: i, id: 'FB-' + String(i + 1).padStart(2, '0'), ...classify(line) }))
+      .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || a.index - b.index);
+
+    const count = key => items.filter(it => it.type === key || it.priority === key).length;
+    summary.append(
+      el('p', '', plural(items.length, 'message') + ' sorted, highest priority first.'),
+      el('span', 'tag tag--bug', plural(count('bug'), 'bug')),
+      el('span', 'tag tag--feature', plural(count('feature'), 'feature request')),
+      el('span', 'tag tag--question', plural(count('question'), 'question')),
+      el('span', 'tag prio prio--high', count('High') + ' high')
+    );
+
+    for (const it of items) {
+      const card = el('article', 'fb-card fb-card--' + it.type);
+      const top = el('div', 'fb-card__top');
+      top.append(
+        el('span', 'tag tag--' + it.type, TYPE_NAME[it.type]),
+        el('span', 'tag prio prio--' + it.priority.toLowerCase(), it.priority),
+        el('span', 'fb-card__id', it.id)
+      );
+      card.append(top, el('p', 'fb-card__text', it.line), el('p', 'fb-card__why', it.why));
+      cards.append(card);
+    }
+
+    if (window.ScrollTrigger) ScrollTrigger.refresh();
+  }
+
+  document.getElementById('fb-run').addEventListener('click', render);
+  document.getElementById('fb-reset').addEventListener('click', () => { input.value = EXAMPLES.join('\n'); render(); });
+  document.getElementById('fb-clear').addEventListener('click', () => { input.value = ''; render(); input.focus(); });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); render(); }
+  });
+
+  input.value = EXAMPLES.join('\n');
+  render();
+})();
+
+/* ═══ CURSOR GLOW ═══ */
+const glow = document.getElementById('cursor-glow');
+let cx = -500, cy = -500;
+window.addEventListener('mousemove', e => {
+  cx += (e.clientX - cx) * 0.08;
+  cy += (e.clientY - cy) * 0.08;
+});
+(function tick() {
+  glow.style.left = cx + 'px';
+  glow.style.top  = cy + 'px';
+  requestAnimationFrame(tick);
+})();
+window.addEventListener('touchstart', () => { glow.style.display = 'none'; }, { once: true });
+</script>
+</body>
+</html>
