@@ -80,8 +80,8 @@
     }
 
     /* Text that sits straight on the background gets a soft dark halo, so it stays readable over the knot */
-    .hero-label, .hero-greeting, .hero-subline, .scroll-cue,
-    .stmt__eyebrow, .stmt__text, .block__intro, .disclaimer, .sorter__ai,
+    .hero-greeting, .hero-subline, .scroll-cue,
+    .stmt__eyebrow, .stmt__text, .block__intro, .disclaimer,
     .final-text, .footer-word, .footer-note {
       text-shadow: 0 0 22px rgba(9,9,11,0.9), 0 1px 3px rgba(9,9,11,0.7);
     }
@@ -176,17 +176,6 @@
       #hero { padding: 4.5rem 6vw 6rem; }
     }
 
-    .hero-label {
-      font-family: var(--font-body);
-      font-size: clamp(0.7rem, 1.1vw, 0.75rem);
-      font-weight: 500;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 2rem;
-      line-height: 1.7;
-    }
-
     .hero-greeting {
       font-family: var(--font-display);
       font-size: clamp(2.3rem, 4.9vw, 4.6rem);
@@ -275,7 +264,6 @@
     }
 
     /* Entrance states, only when GSAP is there to reveal them */
-    .js-anim .hero-label    { opacity: 0; transform: translateY(10px); }
     .js-anim .hero-greeting { opacity: 0; transform: translateY(18px); }
     .js-anim .hero-subline,
     .js-anim .hero-index    { opacity: 0; transform: translateY(14px); }
@@ -456,49 +444,17 @@
       margin-bottom: 1.4rem;
     }
 
-    .ticket__section { padding-top: 1.5rem; }
-
-    .ticket__section > .label { margin-bottom: 0.75rem; }
-
-    .ticket ol,
-    .ticket ul {
+    .ticket ol {
       display: grid;
-      gap: 0.5rem;
-      padding-left: 1.25rem;
-      font-size: 0.95rem;
-      line-height: 1.65;
-      color: var(--text-soft);
+      gap: 0.3rem;
+      padding-left: 1.2rem;
     }
 
     .ticket li::marker { color: var(--accent-dim); }
 
-    .ticket p {
-      font-size: 0.95rem;
-      line-height: 1.65;
-      color: var(--text-soft);
-    }
+    .fields dd .tag { margin-right: 0.35rem; }
 
-    .result-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0 2rem;
-    }
-
-    @media (max-width: 760px) {
-      .result-grid { grid-template-columns: minmax(0, 1fr); }
-    }
-
-    .shots {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      gap: 1.25rem;
-      align-items: start;
-      padding-top: 1.75rem;
-    }
-
-    @media (max-width: 760px) {
-      .shots { grid-template-columns: minmax(0, 1fr); }
-    }
+    .shot { max-width: 560px; margin-top: 1.5rem; }
 
     .shot a { display: block; }
 
@@ -557,19 +513,9 @@
 
     .note p + p { margin-top: 0.75rem; }
 
-    .note__example {
-      margin: 0.75rem 0;
-      padding: 0.15rem 0 0.15rem 0.9rem;
-      border-left: 2px solid var(--accent);
-      color: var(--text);
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-
     .note ul {
       display: grid;
       gap: 0.35rem;
-      margin-top: 1rem;
       padding-left: 1.2rem;
     }
 
@@ -584,13 +530,6 @@
       color: var(--text-muted);
     }
 
-    .note .fields { grid-template-columns: 7.5rem minmax(0, 1fr); border-bottom: 0; padding-bottom: 0; }
-    .note .fields dd { font-size: 0.9rem; }
-
-    @media (max-width: 640px) {
-      .note .fields { grid-template-columns: minmax(0, 1fr); }
-    }
-
     .disclaimer {
       max-width: 1060px;
       margin-top: 1.1rem;
@@ -598,8 +537,6 @@
       line-height: 1.6;
       color: var(--text-muted);
     }
-
-    .disclaimer strong { color: var(--text-soft); font-weight: 500; }
 
     /* ══════════════════════════════════════
        03 FEEDBACK SORTER
@@ -753,16 +690,51 @@
       color: var(--text-muted);
     }
 
-    .sorter__ai {
-      max-width: 1180px;
-      margin-top: 1.1rem;
-      font-size: 0.85rem;
-      line-height: 1.6;
-      color: var(--text-muted);
+    /* ══════════════════════════════════════
+       04 EDGE CASES
+    ══════════════════════════════════════ */
+    .edge {
+      max-width: 860px;
+      overflow: hidden;
+    }
+
+    .edge table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .edge th {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .edge td {
+      padding: 0.9rem 1.25rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-soft);
+      vertical-align: top;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .edge td:first-child { width: 45%; color: var(--text); }
+
+    .edge tr:last-child td { border-bottom: 0; }
+
+    @media (max-width: 560px) {
+      .edge th,
+      .edge td { padding: 0.8rem 0.9rem; }
+      .edge td { font-size: 0.9rem; }
     }
 
     /* ══════════════════════════════════════
-       04 ABOUT
+       05 ABOUT
     ══════════════════════════════════════ */
     .about {
       display: grid;
@@ -783,29 +755,16 @@
 
     .about-item__when { line-height: 1.7; padding-top: 0.2rem; }
 
-    .about-item h3 {
-      font-family: var(--font-display);
-      font-size: clamp(1.1rem, 1.6vw, 1.3rem);
-      font-weight: 500;
-      line-height: 1.3;
-      margin-bottom: 0.45rem;
-    }
-
-    .about-item p,
-    .about-item li {
-      font-size: 0.95rem;
+    .about-item p {
+      font-size: 0.98rem;
       line-height: 1.65;
       color: var(--text-soft);
     }
 
-    .about-item ul {
-      display: grid;
-      gap: 0.3rem;
-      margin-top: 0.75rem;
-      padding-left: 1.2rem;
+    .about-item strong {
+      color: var(--text);
+      font-weight: 500;
     }
-
-    .about-item li::marker { color: var(--accent-dim); }
 
     /* ══════════════════════════════════════
        FINAL STATEMENT
@@ -954,7 +913,6 @@
   <!-- ── HERO ── -->
   <section id="hero">
     <div>
-      <p class="hero-label" id="hero-label">Application · AI Product Manager Intern (AI x Greentech)</p>
       <h1 class="hero-greeting" id="hero-greeting">
         Hi <em>Reonic.</em><br />
         You're looking for someone who has vibe-coded a thing or two.
@@ -963,9 +921,9 @@
         Here are three things I made for this application.
       </p>
       <ol class="hero-index" id="hero-index">
-        <li><a href="#bug-ticket"><span>01</span>A bug ticket</a></li>
+        <li><a href="#bug-ticket"><span>01</span>Bug ticket</a></li>
         <li><a href="#release-notes"><span>02</span>Release notes</a></li>
-        <li><a href="#feedback-sorter"><span>03</span>A feedback sorter</a></li>
+        <li><a href="#feedback-sorter"><span>03</span>Feedback sorter</a></li>
       </ol>
     </div>
     <div class="scroll-cue" id="scroll-cue">
@@ -977,184 +935,99 @@
   <!-- ── 01 BUG TICKET ── -->
   <section class="block" id="bug-ticket">
     <div class="block__head reveal">
-      <span class="stmt__eyebrow">01 / Sample bug ticket</span>
+      <span class="stmt__eyebrow">01 / Bug ticket</span>
       <h2 class="stmt__text">
         <span class="muted">I looked for bugs</span><br />
         <strong>on reonic.com.</strong>
       </h2>
-      <p class="block__intro">
-        I went through Reonic's English website looking for small problems and reproduced this one on 29 October 2026.
-        Here it is as a ticket, written the way I would hand it to an engineer.
-      </p>
     </div>
 
     <article class="card ticket reveal" aria-labelledby="ticket-title">
       <div class="ticket__top">
         <span class="tag tag--bug">Bug</span>
-        <span class="tag">Website / Blog</span>
-        <span class="tag prio prio--medium">Severity: Medium</span>
-        <span class="ticket__date">Reproduced 29 Oct 2026</span>
+        <span class="ticket__date">29 Oct 2026</span>
       </div>
 
-      <h3 class="ticket__title" id="ticket-title">Blog share buttons for LinkedIn, WhatsApp and Email share the post without its link</h3>
+      <h3 class="ticket__title" id="ticket-title">Blog share buttons send the post without its link</h3>
 
       <dl class="fields">
         <dt>Where</dt>
+        <dd>"Share article" box, all 130 English blog posts. Tested in Chrome; empty in server HTML, so all browsers.</dd>
+        <dt>Steps to reproduce</dt>
         <dd>
-          The "Share article" box in the left sidebar of blog posts, in the wide desktop layout (I tested at 1440px).
-          Example post: <a href="https://reonic.com/en-gb/blog/solar-panel-warranty-uk/" target="_blank" rel="noopener"><code>reonic.com/en-gb/blog/solar-panel-warranty-uk/</code></a>
+          <ol>
+            <li>Open <a href="https://reonic.com/en-gb/blog/solar-panel-warranty-uk/" target="_blank" rel="noopener"><code>reonic.com/en-gb/blog/solar-panel-warranty-uk/</code></a> on desktop.</li>
+            <li>Click LinkedIn, WhatsApp or Email.</li>
+          </ol>
         </dd>
-        <dt>Scope</dt>
-        <dd>
-          All 130 English blog posts in the sitemap. The German, French and Italian posts I checked have the same problem.
-          The page also has a second set of share links for smaller screens, with the same empty values.
-        </dd>
-        <dt>Environment</dt>
-        <dd>
-          Chromium browser on macOS, window 1440 x 900. The empty links are already in the HTML the server sends, so this is not browser specific.
-        </dd>
+        <dt>Expected</dt>
+        <dd>Shared message includes the post URL.</dd>
+        <dt>Actual</dt>
+        <dd>LinkedIn gets an empty <code>url=</code>. WhatsApp and Email get the title only.</dd>
+        <dt>Severity</dt>
+        <dd><span class="tag prio prio--medium">Medium</span> 3 of 4 share options fail; Copy link still works.</dd>
+        <dt>Suggested fix</dt>
+        <dd>Build share links from the page's canonical URL.</dd>
       </dl>
 
-      <div class="ticket__section">
-        <span class="label">Steps to reproduce</span>
-        <ol>
-          <li>Open <code>https://reonic.com/en-gb/blog/solar-panel-warranty-uk/</code> in a desktop browser window at least 1280px wide.</li>
-          <li>In the left sidebar, scroll down to "Share article".</li>
-          <li>Click the LinkedIn icon.</li>
-          <li>Go back and click the WhatsApp icon. Then go back and click the Email icon.</li>
-          <li>For comparison, click the Copy link icon and paste the result somewhere.</li>
-        </ol>
-      </div>
-
-      <div class="result-grid">
-        <div class="ticket__section">
-          <span class="label">Expected result</span>
-          <ul>
-            <li>LinkedIn opens its share dialog with the post URL, for example <code>share-offsite/?url=https%3A%2F%2Freonic.com%2Fen-gb%2Fblog%2Fsolar-panel-warranty-uk%2F</code></li>
-            <li>The WhatsApp message contains the post title and the post URL.</li>
-            <li>The email opens with the post URL in the body.</li>
-          </ul>
-        </div>
-        <div class="ticket__section">
-          <span class="label">Actual result</span>
-          <ul>
-            <li>LinkedIn opens <code>https://www.linkedin.com/sharing/share-offsite/?url=</code> with an empty <code>url</code>, so there is nothing to share.</li>
-            <li>WhatsApp opens with the title only and no link (screenshot below).</li>
-            <li>The email opens with the subject filled in and an empty body.</li>
-            <li>Copy link works and copies <code>https://reonic.com/en-gb/blog/solar-panel-warranty-uk/</code>.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="shots">
-        <figure class="shot">
-          <a href="assets/bug-share-context.jpg" target="_blank" rel="noopener">
-            <img src="assets/bug-share-context.jpg" width="1400" height="1288" loading="lazy"
-                 alt="Screenshot of the example blog post with the Share article box in the left sidebar. The LinkedIn, WhatsApp and Email buttons are boxed in red." />
-          </a>
-          <figcaption>Where: the "Share article" box on the example post. Red box and label added by me. Click to enlarge.</figcaption>
-        </figure>
-        <figure class="shot">
-          <a href="assets/bug-share-whatsapp.png" target="_blank" rel="noopener">
-            <img src="assets/bug-share-whatsapp.png" width="1240" height="480" loading="lazy"
-                 alt="Screenshot of the WhatsApp share screen. The message only contains the article title and no link." />
-          </a>
-          <figcaption>Actual: the WhatsApp share screen after clicking the button. The message is only the title. Red box and label added by me. Click to enlarge.</figcaption>
-        </figure>
-      </div>
-
-      <div class="ticket__section">
-        <span class="label">Notes for the engineer</span>
-        <ul>
-          <li>The <code>href</code> values are already empty in the server HTML (checked with curl) and are still empty after the page has loaded.</li>
-          <li>Copy link works, so it probably reads the URL when it is clicked. The other three links look like they are built during server rendering, when the page URL is not known, and are not updated in the browser afterwards.</li>
-          <li>Possible fix: build all share links from the post's canonical URL. It is already correct in the page head: <code>&lt;link rel="canonical" href="https://reonic.com/en-gb/blog/solar-panel-warranty-uk/"&gt;</code></li>
-          <li>To check the fix: click all three buttons on one post per language and confirm the link is there.</li>
-          <li>How I tested: I clicked the buttons with navigation blocked so nothing was posted, then opened the WhatsApp link in a clean browser for the screenshot.</li>
-        </ul>
-      </div>
-
-      <div class="ticket__section">
-        <span class="label">Why Medium</span>
-        <p>
-          Three of the four share options fail on every blog post, in at least four languages. There is no data loss or security risk,
-          and Copy link still works as a workaround, so I would not call it High.
-        </p>
-      </div>
+      <figure class="shot">
+        <a href="assets/bug-share-whatsapp.png" target="_blank" rel="noopener">
+          <img src="assets/bug-share-whatsapp.png" width="1240" height="480" loading="lazy"
+               alt="WhatsApp share screen after clicking the blog's WhatsApp button. The message only contains the article title and no link." />
+        </a>
+        <figcaption>WhatsApp result: title only. Red box is mine.</figcaption>
+      </figure>
     </article>
   </section>
 
   <!-- ── 02 RELEASE NOTES ── -->
   <section class="block" id="release-notes">
     <div class="block__head reveal">
-      <span class="stmt__eyebrow">02 / Sample release notes</span>
+      <span class="stmt__eyebrow">02 / Release notes</span>
       <h2 class="stmt__text">
         <span class="muted">One feature,</span><br />
         <strong>two audiences.</strong>
       </h2>
-      <p class="block__intro">
-        Reonic marks AI Single Line Diagram as new on its homepage. I wrote release notes for it twice:
-        a short, friendly one for installers and a shorter one for colleagues inside Reonic.
-      </p>
     </div>
 
     <div class="notes">
       <article class="card note reveal" aria-labelledby="note-installers">
-        <span class="label note__label">What's new · For installers</span>
-        <h3 class="note__title" id="note-installers">Your single line diagram, drawn for you</h3>
-        <p>
-          Reonic can now create the single line diagram from the components in your planning,
-          so you don't start from a blank page.
-        </p>
-        <p>Want to change something? Just ask. For example:</p>
-        <p class="note__example">"Add an AC surge protector at the inverter output."</p>
-        <p>
-          The AI updates the diagram. You check the result in the editor, change anything by hand if you like, and save.
-        </p>
-        <ul>
-          <li>Built from your planned system</li>
-          <li>Edit by asking, or by hand</li>
-          <li>Save diagrams as templates and reuse them</li>
-          <li>Import a diagram you already have</li>
-          <li>Export as PDF or JPG</li>
-        </ul>
-        <p class="note__foot">Available for residential projects in workspaces with AI Circuit Plan turned on.</p>
+        <span class="label note__label">For installers</span>
+        <h3 class="note__title" id="note-installers">Single line diagrams, drawn for you</h3>
+        <p>Reonic now draws the diagram from your planned components.</p>
+        <p>Ask for changes: "Add an AC surge protector at the inverter output."</p>
+        <p>Review, then save or export as PDF or JPG.</p>
+        <p class="note__foot">For residential projects with AI Circuit Plan turned on.</p>
       </article>
 
       <article class="card note reveal" aria-labelledby="note-internal">
-        <span class="label note__label">Internal · For Reonic colleagues</span>
-        <h3 class="note__title" id="note-internal">AI Single Line Diagram (AI Circuit Plan)</h3>
-        <dl class="fields">
-          <dt>What</dt>
-          <dd>Generates the diagram from the planned components. Users ask AI to add, remove or reconnect elements, then review and save in the editor. Export as JPG or PDF.</dd>
-          <dt>Who</dt>
-          <dd>Residential projects, in workspaces with AI Circuit Plan enabled.</dd>
-          <dt>Key message</dt>
-          <dd>The AI suggests the change. The installer checks it and saves.</dd>
-          <dt>Confirm first</dt>
-          <dd>Release date, markets and plans, and how a workspace gets it enabled.</dd>
-        </dl>
+        <span class="label note__label">Internal</span>
+        <h3 class="note__title" id="note-internal">AI Circuit Plan</h3>
+        <ul>
+          <li>AI drafts and edits the SLD; users review it.</li>
+          <li>Residential projects in enabled workspaces.</li>
+          <li>To confirm: release date, markets, plans.</li>
+        </ul>
       </article>
     </div>
 
     <p class="disclaimer reveal">
-      <strong>Based only on public information:</strong> Reonic's
-      <a href="https://reonic.com/en-gb/product/360h/single-line-diagram/" target="_blank" rel="noopener">Single Line Diagram product page</a>,
-      read on 29 October 2026. I don't know the real release date, rollout or screens, so I left them out or listed them as questions.
+      Based only on Reonic's
+      <a href="https://reonic.com/en-gb/product/360h/single-line-diagram/" target="_blank" rel="noopener">public product page</a>.
     </p>
   </section>
 
   <!-- ── 03 FEEDBACK SORTER ── -->
   <section class="block" id="feedback-sorter">
     <div class="block__head reveal">
-      <span class="stmt__eyebrow">03 / Working prototype</span>
+      <span class="stmt__eyebrow">03 / Feedback sorter</span>
       <h2 class="stmt__text">
         <span class="muted">Feedback in,</span><br />
         <strong>tickets out.</strong>
       </h2>
       <p class="block__intro">
-        Paste customer feedback, one message per line. The sorter files each message as a Bug, Feature request or Question
-        and gives it a priority. It runs in your browser, with no backend and no API keys.
+        Paste feedback, one message per line, to get sorted tickets.
+        Keyword rules for now; a real version could use an AI model.
       </p>
     </div>
 
@@ -1183,16 +1056,39 @@
       </div>
     </div>
 
-    <p class="sorter__ai reveal">
-      This version uses simple keyword rules in JavaScript. A real version could use an AI model to sort each message
-      and write the ticket title, with a person checking the result.
-    </p>
   </section>
 
-  <!-- ── 04 ABOUT ── -->
+  <!-- ── 04 EDGE CASES ── -->
+  <section class="block" id="edge-cases">
+    <div class="block__head reveal">
+      <span class="stmt__eyebrow">04 / Creating an offer</span>
+      <h2 class="stmt__text">
+        <span class="muted">Edge cases</span><br />
+        <strong>I'd test.</strong>
+      </h2>
+      <p class="block__intro">Based on public product pages only.</p>
+    </div>
+
+    <div class="card edge reveal">
+      <table>
+        <thead>
+          <tr><th scope="col">What could go wrong</th><th scope="col">How I'd test it</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Design changes after offer</td><td>Edit modules, recheck offer</td></tr>
+          <tr><td>Variant total wrong</td><td>Add battery, sum line items</td></tr>
+          <tr><td>Long offer breaks PDF</td><td>40 items, long names</td></tr>
+          <tr><td>Signing fails on phone</td><td>Sign on iPhone and Android</td></tr>
+          <tr><td>Invoice differs from offer</td><td>Invoice signed offer, compare totals</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 05 ABOUT ── -->
   <section class="block" id="about">
     <div class="block__head reveal">
-      <span class="stmt__eyebrow">04 / About me</span>
+      <span class="stmt__eyebrow">05 / About me</span>
       <h2 class="stmt__text">
         <span class="muted">Where I've</span><br />
         <strong>done this before.</strong>
@@ -1202,34 +1098,17 @@
     <div class="about">
       <article class="card about-item reveal">
         <span class="label about-item__when">Dec 2024 - Jun 2025</span>
-        <div>
-          <h3>Technical Program Manager, SuperAGI</h3>
-          <p>An AI B2B CRM and sales automation startup.</p>
-          <ul>
-            <li>Coordinated delivery across 6 AI products</li>
-            <li>Tracked releases from staging to production</li>
-            <li>Ran product demos with clients to collect requirements and bugs</li>
-            <li>Prioritised them with MoSCoW and RICE, and wrote PRDs</li>
-            <li>Introduced 2-week sprints (task completion +30%)</li>
-            <li>Reported weekly to 10+ stakeholders</li>
-          </ul>
-        </div>
+        <p><strong>Technical Program Manager, SuperAGI.</strong> Coordinated releases across 6 AI products and turned client feedback into prioritised tickets.</p>
       </article>
 
       <article class="card about-item reveal">
-        <span class="label about-item__when">Built with Claude Code</span>
-        <div>
-          <h3>TUM Business Game website</h3>
-          <p>Astro, TypeScript, Keystatic CMS, Vercel.</p>
-        </div>
+        <span class="label about-item__when">Claude Code</span>
+        <p><strong>Built the TUM Business Game website.</strong> Astro, TypeScript, Keystatic CMS, Vercel.</p>
       </article>
 
       <article class="card about-item reveal">
         <span class="label about-item__when">Now</span>
-        <div>
-          <h3>M.Sc. Digital Innovation Management, Hochschule Neu-Ulm</h3>
-          <p>Available full-time for 6 months from December 2026.</p>
-        </div>
+        <p><strong>M.Sc. Digital Innovation Management, Hochschule Neu-Ulm.</strong> Available full-time for 6 months from December 2026.</p>
       </article>
     </div>
   </section>
@@ -1381,8 +1260,7 @@
 
   // Hero
   gsap.timeline({ defaults: { ease: 'power3.out' } })
-    .to('#hero-label',    { opacity: 1, y: 0, duration: 0.8, delay: 0.4 })
-    .to('#hero-greeting', { opacity: 1, y: 0, duration: 1.0 }, '-=0.5')
+    .to('#hero-greeting', { opacity: 1, y: 0, duration: 1.0, delay: 0.4 })
     .to('#hero-subline',  { opacity: 1, y: 0, duration: 0.8 }, '-=0.5')
     .to('#hero-index',    { opacity: 1, y: 0, duration: 0.8 }, '-=0.5')
     .to('#scroll-cue',    { opacity: 1, duration: 0.6 }, '-=0.2');
